@@ -1,11 +1,11 @@
+import 'react-native-reanimated'; // ← add this as FIRST import
 import { StyleSheet, Text, View, TouchableHighlight, Image, Alert, BackHandler} from 'react-native';
 import React, { useState } from 'react';
 import Status from './components/Status';
 import MessageList from './components/MessageList';
 import { createImageMessage, createLocationMessage, createTextMessage } from './utils/MessageUtils';
 import Toolbar from './components/Toolbar';
-
-
+import Animated, { SlideInDown } from 'react-native-reanimated';
 
 export default class App extends React.Component {
   
@@ -20,7 +20,41 @@ export default class App extends React.Component {
       }),
     ],
     fullscreenImageId: null,
-  }
+    isInputFocused: false,
+  };
+
+  handlePressToolbarCamera = () => {
+    
+  };
+  handlePressToolbarLocation = () => {
+    
+  };
+  handleChangeFocus = (isFocused) => {
+    this.setState({ isInputFocused: isFocused });
+    
+  };
+  handleSubmit = (text) => {
+    const { messages } = this.state;
+    this.setState({
+    messages: [createTextMessage(text), ...messages],
+    });
+  };
+  renderToolbar() {
+  const { isInputFocused } = this.state;
+  return (
+    <Animated.View 
+      entering={SlideInDown.duration(500)} // ← slides up from bottom on load
+    >
+      <Toolbar
+        isFocused={isInputFocused}
+        onSubmit={this.handleSubmit}
+        onChangeFocus={this.handleChangeFocus}
+        onPressCamera={this.handlePressToolbarCamera}
+        onPressLocation={this.handlePressToolbarLocation}
+      />
+    </Animated.View>
+  );
+}
 
   dismissFullscreenImage = () => {
     this.setState({ fullscreenImageId: null });
@@ -51,7 +85,10 @@ export default class App extends React.Component {
       break;
       
       case 'image':
-        this.setState({ fullscreenImageId: id }); 
+        this.setState({
+           fullscreenImageId: id,
+            isInputFocused: false,
+          }); 
         break;
       default:
         break;
@@ -70,7 +107,7 @@ export default class App extends React.Component {
     );
   }
 
-  renderFullscreenImage = () => {
+ renderFullscreenImage = () => {
     const { messages, fullscreenImageId } = this.state; 
     if (!fullscreenImageId) return null;
 
@@ -85,7 +122,7 @@ export default class App extends React.Component {
     )
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.subscription = BackHandler.addEventListener('hardwareBackPress', () => { 
       const { fullscreenImageId } = this.state;
       if (fullscreenImageId) { 
@@ -102,10 +139,13 @@ export default class App extends React.Component {
   
   render() {
     return (
+      
     <View style={styles.container}>
+      
       <Status />
       {this.renderMessageList()}
       {this.renderFullscreenImage()}
+      {this.renderToolbar()}
     </View>
     )  
 }}
